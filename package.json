@@ -2,5 +2,9 @@
   "name": "js",
   "version": "0.0.0",
   "private": true,
-  "dependencies": {}
+  "dependencies": {
+    "firebase": "^8.1.1",
+    "firebaseui": "^4.7.1",
+    "node": "^15.3.0"
+  }
 }
