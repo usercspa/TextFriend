@@ -2,9 +2,10 @@
 import './style.css';
 require('dotenv').config();
 
-
-
 // Write Javascript code!
-const appDiv = document.getElementById('app');
-appDiv.innerHTML = `<h1>JS Starter</h1>`;
+const inputName = document.getElementById('name');
+const inputNumber = document.getElementById('phone');
+const inputPreferences = document.getElementById('preferences');
+
+
 
