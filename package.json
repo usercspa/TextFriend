@@ -4,8 +4,10 @@
   "private": true,
   "dependencies": {
     "dotenv": "^8.2.0",
+    "express": "^4.17.1",
     "firebase": "^8.1.1",
     "firebaseui": "^4.7.1",
+    "ngrok": "^3.3.0",
     "node": "^15.3.0",
     "twilio": "^4.6.0"
   }
