@@ -1,0 +1,824 @@
+{
+  "description": "Simple Survey",
+  "states": [
+    {
+      "name": "Trigger",
+      "type": "trigger",
+      "transitions": [
+        {
+          "next": "signup",
+          "event": "incomingMessage"
+        },
+        {
+          "next": "say_play_1",
+          "event": "incomingCall"
+        },
+        {
+          "next": "signup",
+          "event": "incomingRequest"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 0,
+          "y": -90
+        }
+      }
+    },
+    {
+      "name": "signup",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "check_response_1",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 70,
+          "y": 120
+        },
+        "from": "{{flow.channel.address}}",
+        "body": "Hello! Would you like to sign up for TextFriend? Please reply \"Yes\" or \"No\"",
+        "timeout": "3600"
+      }
+    },
+    {
+      "name": "check_response_1",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "unknown_answer_1",
+          "event": "noMatch"
+        },
+        {
+          "next": "name",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "signup?",
+              "arguments": [
+                "{{widgets.signup.inbound.Body}}"
+              ],
+              "type": "equal_to",
+              "value": "Yes"
+            }
+          ]
+        },
+        {
+          "next": "check_help_needed",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to No",
+              "arguments": [
+                "{{widgets.signup.inbound.Body}}"
+              ],
+              "type": "equal_to",
+              "value": "No"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.signup.inbound.Body}}",
+        "offset": {
+          "x": 70,
+          "y": 340
+        }
+      }
+    },
+    {
+      "name": "unknown_answer_1",
+      "type": "send-message",
+      "transitions": [
+        {
+          "next": "signup",
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -310,
+          "y": 250
+        },
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "I'm sorry, I didn't understand. Please reply \"Yes\" or \"No\"."
+      }
+    },
+    {
+      "name": "name",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "check_response_2",
+          "event": "incomingMessage"
+        },
+        {
+          "next": "unknown_answer_2",
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 70,
+          "y": 580
+        },
+        "from": "{{flow.channel.address}}",
+        "body": "What's your full name?",
+        "timeout": "3600"
+      }
+    },
+    {
+      "name": "check_response_2",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "unknown_answer_2",
+          "event": "noMatch"
+        },
+        {
+          "next": "Copy_of_send_results_to_server",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "not blank",
+              "arguments": [
+                "{{widgets.name.inbound.Body}}"
+              ],
+              "type": "is_not_blank",
+              "value": "Is Not Blank"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.name.inbound.Body}}",
+        "offset": {
+          "x": 70,
+          "y": 780
+        }
+      }
+    },
+    {
+      "name": "unknown_answer_2",
+      "type": "send-message",
+      "transitions": [
+        {
+          "next": "name",
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -320,
+          "y": 650
+        },
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "I'm sorry, can I have your name again?"
+      }
+    },
+    {
+      "name": "third_question",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "send_results_to_server",
+          "event": "incomingMessage"
+        },
+        {
+          "next": "Copy_of_Copy_of_unknown_answer_2",
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 70,
+          "y": 1040
+        },
+        "from": "{{flow.channel.address}}",
+        "body": "Can I have your phone number?",
+        "timeout": "3600"
+      }
+    },
+    {
+      "name": "thank_you",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 70,
+          "y": 1480
+        },
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Thank you so much! Our volunteer will get in touch with you shortly. Have a nice day!"
+      }
+    },
+    {
+      "name": "send_results_to_server",
+      "type": "make-http-request",
+      "transitions": [
+        {
+          "next": "Copy_of_third_question",
+          "event": "success"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 70,
+          "y": 1260
+        },
+        "method": "POST",
+        "parameters": [
+          {
+            "value": "{{widgets.signup.inbound.Body}} ",
+            "key": "question1"
+          },
+          {
+            "value": "{{widgets.name.inbound.Body}} ",
+            "key": "question2"
+          },
+          {
+            "value": "{{widgets.third_question.inbound.Body}} ",
+            "key": "question3"
+          }
+        ],
+        "url": "https://textfriend-b331f.firebaseapp.com/?100979",
+        "timeout": 3600
+      }
+    },
+    {
+      "name": "check_help_needed",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "check_help_response",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 511,
+          "y": 341
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "body": "Do you need any help? Please reply \"Yes\" or \"No\"",
+        "timeout": "3600"
+      }
+    },
+    {
+      "name": "check_help_response",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "Copy_of_unknown_answer_2",
+          "event": "noMatch"
+        },
+        {
+          "next": "send_and_reply_3",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "signup?",
+              "arguments": [
+                "{{widgets.signup.inbound.Body}}"
+              ],
+              "type": "equal_to",
+              "value": "Yes"
+            }
+          ]
+        },
+        {
+          "next": "send_message_2",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to No",
+              "arguments": [
+                "{{widgets.signup.inbound.Body}}"
+              ],
+              "type": "equal_to",
+              "value": "No"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.signup.inbound.Body}}",
+        "offset": {
+          "x": 510,
+          "y": 560
+        }
+      }
+    },
+    {
+      "name": "send_message_2",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 840,
+          "y": 790
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Great! See you!"
+      }
+    },
+    {
+      "name": "send_and_reply_3",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "Copy_of_check_help_response",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 500,
+          "y": 800
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "body": "Do you want a call?",
+        "timeout": "3600"
+      }
+    },
+    {
+      "name": "Copy_of_unknown_answer_2",
+      "type": "send-message",
+      "transitions": [
+        {
+          "next": "send_and_reply_3",
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1070,
+          "y": 1040
+        },
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "I'm sorry, I didn't understand. Please reply \"Yes\" or \"No\"."
+      }
+    },
+    {
+      "name": "Copy_of_check_help_response",
+      "type": "split-based-on",
+      "transitions": [
+        {
+          "next": "Copy_of_unknown_answer_2",
+          "event": "noMatch"
+        },
+        {
+          "next": "call_user_1",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "signup?",
+              "arguments": [
+                "{{widgets.signup.inbound.Body}}"
+              ],
+              "type": "equal_to",
+              "value": "Yes"
+            }
+          ]
+        },
+        {
+          "next": "send_and_reply_4",
+          "event": "match",
+          "conditions": [
+            {
+              "friendly_name": "If value equal_to No",
+              "arguments": [
+                "{{widgets.signup.inbound.Body}}"
+              ],
+              "type": "equal_to",
+              "value": "No"
+            }
+          ]
+        }
+      ],
+      "properties": {
+        "input": "{{widgets.signup.inbound.Body}}",
+        "offset": {
+          "x": 520,
+          "y": 1040
+        }
+      }
+    },
+    {
+      "name": "Copy_of_Copy_of_unknown_answer_2",
+      "type": "send-message",
+      "transitions": [
+        {
+          "next": "third_question",
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -490,
+          "y": 1150
+        },
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "I'm sorry, can I have your name again?"
+      }
+    },
+    {
+      "name": "send_and_reply_4",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "http_3",
+          "event": "incomingMessage"
+        },
+        {
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 760,
+          "y": 1300
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "body": "Please leave a message and we will contact you shortly",
+        "timeout": "3600"
+      }
+    },
+    {
+      "name": "send_message_3",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1200,
+          "y": 1680
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Message received. We will be in contact shortly"
+      }
+    },
+    {
+      "name": "call_user_1",
+      "type": "make-outgoing-call-v2",
+      "transitions": [
+        {
+          "next": "say_play_1",
+          "event": "answered"
+        },
+        {
+          "next": "send_and_reply_4",
+          "event": "busy"
+        },
+        {
+          "next": "send_and_reply_4",
+          "event": "noAnswer"
+        },
+        {
+          "next": "send_and_reply_4",
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "machine_detection_speech_threshold": "2400",
+        "detect_answering_machine": false,
+        "offset": {
+          "x": 430,
+          "y": 1270
+        },
+        "recording_channels": "dual",
+        "timeout": 60,
+        "machine_detection": "Enable",
+        "trim": "trim-silence",
+        "record": true,
+        "machine_detection_speech_end_threshold": "1200",
+        "machine_detection_timeout": "30",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "machine_detection_silence_timeout": "5000"
+      }
+    },
+    {
+      "name": "say_play_1",
+      "type": "say-play",
+      "transitions": [
+        {
+          "next": "gather_1",
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "voice": "woman",
+        "offset": {
+          "x": 440,
+          "y": 1500
+        },
+        "loop": 1,
+        "say": "To help improving our services, the call will be recorded.",
+        "language": "en-GB"
+      }
+    },
+    {
+      "name": "say_play_2",
+      "type": "say-play",
+      "transitions": [
+        {
+          "event": "audioComplete"
+        }
+      ],
+      "properties": {
+        "voice": "woman",
+        "offset": {
+          "x": 360,
+          "y": 1800
+        },
+        "loop": 1,
+        "say": "A real human will be in contact with you shortly. Bye!",
+        "language": "en-GB"
+      }
+    },
+    {
+      "name": "gather_1",
+      "type": "gather-input-on-call",
+      "transitions": [
+        {
+          "event": "keypress"
+        },
+        {
+          "next": "say_play_2",
+          "event": "speech"
+        },
+        {
+          "next": "gather_1",
+          "event": "timeout"
+        }
+      ],
+      "properties": {
+        "speech_timeout": "auto",
+        "offset": {
+          "x": 755,
+          "y": 1766
+        },
+        "loop": 1,
+        "finish_on_key": "#",
+        "say": "Hello! Do you need any help?",
+        "stop_gather": true,
+        "gather_language": "en",
+        "profanity_filter": "true",
+        "timeout": 5
+      }
+    },
+    {
+      "name": "http_2",
+      "type": "make-http-request",
+      "transitions": [
+        {
+          "event": "success"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 370,
+          "y": 2020
+        },
+        "method": "POST",
+        "content_type": "application/x-www-form-urlencoded;charset=utf-8",
+        "url": "https://textfriend-b331f.firebaseapp.com/?100979"
+      }
+    },
+    {
+      "name": "http_3",
+      "type": "make-http-request",
+      "transitions": [
+        {
+          "next": "send_message_3",
+          "event": "success"
+        },
+        {
+          "next": "Copy_of_send_message_3",
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1180,
+          "y": 1430
+        },
+        "method": "POST",
+        "content_type": "application/x-www-form-urlencoded;charset=utf-8",
+        "url": "https://textfriend-b331f.firebaseapp.com/?100979"
+      }
+    },
+    {
+      "name": "Copy_of_send_message_3",
+      "type": "send-message",
+      "transitions": [
+        {
+          "event": "sent"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": 1550,
+          "y": 1680
+        },
+        "service": "{{trigger.message.InstanceSid}}",
+        "channel": "{{trigger.message.ChannelSid}}",
+        "from": "{{flow.channel.address}}",
+        "to": "{{contact.channel.address}}",
+        "body": "Server error. Please try again later"
+      }
+    },
+    {
+      "name": "Copy_of_send_results_to_server",
+      "type": "make-http-request",
+      "transitions": [
+        {
+          "next": "third_question",
+          "event": "success"
+        },
+        {
+          "next": "unknown_answer_2",
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -520,
+          "y": 870
+        },
+        "method": "POST",
+        "parameters": [
+          {
+            "value": "{{widgets.signup.inbound.Body}} ",
+            "key": "question1"
+          },
+          {
+            "value": "{{widgets.name.inbound.Body}} ",
+            "key": "question2"
+          },
+          {
+            "value": "{{widgets.third_question.inbound.Body}} ",
+            "key": "question3"
+          }
+        ],
+        "url": "https://textfriend-b331f.firebaseapp.com/?100979",
+        "timeout": 3600
+      }
+    },
+    {
+      "name": "Copy_2_of_send_results_to_server",
+      "type": "make-http-request",
+      "transitions": [
+        {
+          "next": "thank_you",
+          "event": "success"
+        },
+        {
+          "event": "failed"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -660,
+          "y": 1400
+        },
+        "method": "POST",
+        "parameters": [
+          {
+            "value": "{{widgets.signup.inbound.Body}} ",
+            "key": "question1"
+          },
+          {
+            "value": "{{widgets.name.inbound.Body}} ",
+            "key": "question2"
+          },
+          {
+            "value": "{{widgets.third_question.inbound.Body}} ",
+            "key": "question3"
+          }
+        ],
+        "url": "https://textfriend-b331f.firebaseapp.com/?100979",
+        "timeout": 3600
+      }
+    },
+    {
+      "name": "Copy_of_third_question",
+      "type": "send-and-wait-for-reply",
+      "transitions": [
+        {
+          "next": "Copy_2_of_send_results_to_server",
+          "event": "incomingMessage"
+        },
+        {
+          "next": "thank_you",
+          "event": "timeout"
+        },
+        {
+          "event": "deliveryFailure"
+        }
+      ],
+      "properties": {
+        "offset": {
+          "x": -290,
+          "y": 1440
+        },
+        "from": "{{flow.channel.address}}",
+        "body": "We will be be matching you with a volunteer. Do you have any preferences? E.g. interest/ age group/ location etc.",
+        "timeout": "3600"
+      }
+    }
+  ],
+  "initial_state": "Trigger",
+  "flags": {
+    "allow_concurrent_calls": true
+  }
+}
